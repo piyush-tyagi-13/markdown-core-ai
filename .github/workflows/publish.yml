@@ -26,6 +26,5 @@ jobs:
 
       - name: Publish to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
-        # Uses PyPI Trusted Publishing — no API token stored in secrets.
-        # Set up at: pypi.org → your project → Publishing → Add publisher
-        # Publisher: GitHub Actions, repo: piyush-tyagi-13/markdown-core-ai, workflow: publish.yml
+        with:
+          password: ${{ secrets.PYPI_API_TOKEN }}
