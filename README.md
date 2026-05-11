@@ -4,7 +4,7 @@
 
 `mdcore` is a local, LLM-agnostic knowledge base engine for anyone with a folder of markdown notes. It reads and writes your vault intelligently - retrieve context on demand, ingest new knowledge with automatic classification and routing, all from the terminal or a TUI.
 
-**PyPI:** `markdowncore-ai` | **CLI:** `mdcore` | **Version:** 1.0.4
+**PyPI:** `markdowncore-ai` | **CLI:** `mdcore` | **Version:** 1.1.0
 
 ---
 
@@ -116,6 +116,8 @@ mdcore status                      # Index health, drift warnings
 mdcore eval [topic]                # Retrieval quality checklist
 mdcore config                      # Open config in editor
 mdcore config --validate           # Validate config
+mdcore serve                           # Start REST API server (requires [serve])
+mdcore mcp                             # Start MCP server over stdio (requires [mcp])
 ```
 
 ### Multiple vaults / config profiles
@@ -143,7 +145,10 @@ mdcore supports local and API-backed models. Mix and match per use case.
 ```bash
 uv tool install "markdowncore-ai[openai]"
 uv tool install "markdowncore-ai[anthropic]"
-uv tool install "markdowncore-ai[all]"    # every backend
+uv tool install "markdowncore-ai[all]"           # every backend
+uv tool install "markdowncore-ai[multimodal]"    # PDF, DOCX, TXT indexing
+uv tool install "markdowncore-ai[serve]"         # REST API server
+uv tool install "markdowncore-ai[mcp]"           # MCP server for Claude Desktop
 ```
 
 ### Aggregator backend
@@ -273,6 +278,133 @@ mdcore ingest --file note.md --models ~/.mdcore/models-cheap.yaml
 
 ---
 
+## Multi-Modal Indexing
+
+By default mdcore indexes `.md` files only. Enable additional formats in `~/.mdcore/config.yaml`:
+
+```yaml
+vault:
+  index_pdf: true    # PDF text extraction (text-based PDFs; scanned PDFs return no text)
+  index_docx: true   # Word documents (.docx only, not legacy .doc)
+  index_txt: true    # Plain text files
+```
+
+Requires the `[multimodal]` extra:
+
+```bash
+pip install 'markdowncore-ai[multimodal]'
+# or
+uv tool install "markdowncore-ai[multimodal]"
+```
+
+Once enabled, run `mdcore index` as normal - PDF/DOCX/TXT files appear in `mdcore status` and are searchable via `mdcore search`.
+
+**Limitations:**
+- Scanned PDFs (image-only) yield no text - extraction requires selectable text layers
+- `.doc` (legacy binary Word format) is not supported, only `.docx`
+
+
+---
+
+## REST API
+
+Start the HTTP server to expose vault search and ingestion as JSON endpoints:
+
+```bash
+pip install 'markdowncore-ai[serve]'
+mdcore serve                          # default: http://127.0.0.1:8765
+mdcore serve --host 0.0.0.0 --port 9000
+mdcore serve --reload                 # dev mode, auto-reload on code change
+```
+
+### Endpoints
+
+| Method | Path | Description |
+|---|---|---|
+| `GET` | `/health` | Index health - chunk count, vault path |
+| `POST` | `/ask` | Ask a question, get synthesised answer + sources |
+| `POST` | `/propose` | Classify and propose ingestion (no write) |
+| `POST` | `/search/invoke` | LangServe chain endpoint |
+| `GET` | `/docs` | Swagger UI |
+
+### Examples
+
+```bash
+# Health check
+curl http://127.0.0.1:8765/health
+
+# Ask a question
+curl -X POST http://127.0.0.1:8765/ask \
+  -H "Content-Type: application/json" \
+  -d '{"query": "what is the mTLS topology for the COE stack?"}'
+
+# Propose ingestion (returns proposal, does not write)
+curl -X POST http://127.0.0.1:8765/propose \
+  -H "Content-Type: application/json" \
+  -d '{"content": "Meeting notes from arch review...", "title": "Arch Review 2025-05"}'
+
+# LangServe invoke
+curl -X POST http://127.0.0.1:8765/search/invoke \
+  -H "Content-Type: application/json" \
+  -d '{"input": {"query": "kubernetes ingress"}}'
+```
+
+OpenAPI spec: [`docs/openapi.json`](docs/openapi.json) - import into Postman, Insomnia, or any OpenAPI-compatible client.
+
+The chain implementation uses `RunnableLambda` wrapping the existing two-phase retrieval pipeline - the LangServe layer adds HTTP transport without replacing mdcore's BM25 pre-filter or vector search.
+
+
+---
+
+## MCP Server (Claude Desktop Integration)
+
+mdcore exposes its vault as MCP tools that Claude Desktop (and any MCP-compatible client) can call autonomously during a conversation.
+
+```bash
+pip install 'markdowncore-ai[mcp]'
+```
+
+Add to `~/Library/Application Support/Claude/claude_desktop_config.json` (macOS) or `%APPDATA%\Claude\claude_desktop_config.json` (Windows):
+
+```json
+{
+  "mcpServers": {
+    "mdcore": {
+      "command": "mdcore",
+      "args": ["mcp"],
+      "env": {
+        "MDCORE_CONFIG_PATH": "/Users/you/.mdcore/config.yaml"
+      }
+    }
+  }
+}
+```
+
+Restart Claude Desktop. mdcore appears as a connected tool. Ask Claude:
+- *"What do my notes say about the payments architecture?"*
+- *"Save this meeting summary to my vault"*
+
+### Tools exposed
+
+| Tool | Description |
+|---|---|
+| `search_vault` | Search vault, return synthesised answer with cited sources |
+| `ingest_note` | Classify content and propose where to save it (does not write automatically) |
+| `vault_status` | Current index stats - chunk count, file types, backends |
+
+### Multiple vaults
+
+Expose separate work and personal vaults as distinct tools by running two MCP server processes with different `--config` paths, or configure vault-scoped tool variants directly in `mcp_server/server.py`.
+
+### Smoke test (without Claude Desktop)
+
+```bash
+echo '{"jsonrpc":"2.0","id":1,"method":"tools/list","params":{}}' | mdcore mcp
+```
+
+
+---
+
 ## Observability
 
 Token usage logged after every call to `~/.mdcore/logs/`:
@@ -289,4 +421,4 @@ llm:
 
 ---
 
-*mdcore - Markdown CORE AI v1.0.4*
+*mdcore - Markdown CORE AI v1.1.0*

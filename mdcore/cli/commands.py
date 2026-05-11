@@ -518,6 +518,7 @@ def index(
     from mdcore.core.indexer.vault_scanner import VaultScanner
     from mdcore.core.indexer.manifest_manager import ManifestManager
     from mdcore.core.indexer.document_loader import DocumentLoader
+    from mdcore.core.indexer.multimodal_loader import MultiModalLoader
     from mdcore.core.indexer.text_splitter import TextSplitter
     from mdcore.core.indexer.index_writer import IndexWriter
     from mdcore.utils.logging import get_logger
@@ -542,6 +543,7 @@ def index(
     scanner = VaultScanner(cfg.vault, cfg.indexer)
     manifest = ManifestManager(cfg.manifest, cfg.vault)
     loader = DocumentLoader(cfg.vault)
+    mm_loader = MultiModalLoader(cfg.vault)
     splitter = TextSplitter(cfg.indexer)
     store = _make_store(cfg)
     engine = _make_engine(cfg)
@@ -600,7 +602,7 @@ def index(
         task = p.add_task("Indexing...", total=len(files_to_index))
         for path in files_to_index:
             try:
-                doc = loader.load(path)
+                doc = loader.load(path) if path.suffix.lower() == ".md" else mm_loader.load(path)
                 chunks = splitter.split(doc)
                 source_file = doc.metadata.get("source_file", str(path))
                 writer.write(chunks, source_file)
@@ -1271,3 +1273,81 @@ def gui(config: Optional[str] = _cfg_option):
         console.print("[red]Textual not installed.[/red] Run: uv tool install markdowncore-ai --with textual --force")
         raise typer.Exit(1)
     run(config_path=config)
+
+
+# ── mdcore serve ──────────────────────────────────────────────────────────────
+
+@app.command()
+def serve(
+    host: str = typer.Option("127.0.0.1", help="Bind host"),
+    port: int = typer.Option(8765, help="Bind port"),
+    config: Optional[str] = _cfg_option,
+    reload: bool = typer.Option(False, help="Auto-reload on code change (dev mode)"),
+):
+    """Start the mdcore REST API server."""
+    try:
+        import uvicorn
+    except ImportError:
+        console.print("[red]uvicorn not installed.[/red] Run: pip install \'markdowncore-ai[serve]\'")
+        raise typer.Exit(1)
+
+    if config:
+        import os as _os
+        _os.environ["MDCORE_CONFIG_PATH"] = str(config)
+
+    try:
+        from langserve import add_routes as _  # noqa: F401
+        langserve_available = True
+    except ImportError:
+        langserve_available = False
+
+    console.print(f"[green]mdcore API starting on http://{host}:{port}[/green]")
+    console.print(f"[dim]Swagger UI: http://{host}:{port}/docs[/dim]")
+    if langserve_available:
+        console.print(f"[dim]LangServe search: POST http://{host}:{port}/search/invoke[/dim]")
+
+    uvicorn.run(
+        "mdcore.serve.server:app",
+        host=host,
+        port=port,
+        reload=reload,
+        log_level="info",
+    )
+
+
+# ── mdcore mcp ────────────────────────────────────────────────────────────────
+
+@app.command()
+def mcp(
+    config: Optional[str] = typer.Option(None, "--config", help="Config file path"),
+):
+    """
+    Start the mdcore MCP server (stdio transport).
+
+    Add to Claude Desktop config (~/.../claude_desktop_config.json):
+
+      {
+        "mcpServers": {
+          "mdcore": {
+            "command": "mdcore",
+            "args": ["mcp"]
+          }
+        }
+      }
+    """
+    try:
+        import mcp as _mcp  # noqa: F401
+    except ImportError:
+        err_console = Console(stderr=True)
+        err_console.print("[red]mcp not installed.[/red] Run: pip install \'markdowncore-ai[mcp]\'")
+        raise typer.Exit(1)
+
+    import asyncio
+    from mdcore.mcp_server.server import main
+
+    if config:
+        import os as _os
+        _os.environ["MDCORE_CONFIG_PATH"] = str(config)
+
+    # MCP server runs over stdio - no stdout output (would corrupt the protocol)
+    asyncio.run(main())

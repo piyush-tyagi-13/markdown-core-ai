@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "markdowncore-ai"
-version = "1.0.10"
+version = "1.1.0"
 description = "Markdown CORE AI - Classification, Organisation, Retrieval & Entry for your personal markdown knowledge base"
 readme = "README.md"
 license = "MIT"
@@ -65,6 +65,19 @@ all = [
     "langchain-huggingface>=0.1",
     "sentence-transformers>=3",
     # llm-keypool not included here — install separately (has its own CLI)
+]
+multimodal = [
+    "pypdf>=4.0",
+    "python-docx>=1.1",
+]
+serve = [
+    "fastapi>=0.110",
+    "uvicorn>=0.29",
+    "langserve[all]>=0.2",
+    "sse-starlette>=1.6",
+]
+mcp = [
+    "mcp>=1.0",
 ]
 aggregator = [
     "llm-keypool>=0.3.1",

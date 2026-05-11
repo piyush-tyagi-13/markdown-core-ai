@@ -10,7 +10,11 @@ vault:
     - noise
   excluded_extensions:
     - .canvas
-    - .pdf
+  # Multi-modal indexing: off by default
+  # Requires: pip install 'markdowncore-ai[multimodal]'
+  index_pdf: false
+  index_docx: false
+  index_txt: false
 
 # ─────────────────────────────
 # INDEXER

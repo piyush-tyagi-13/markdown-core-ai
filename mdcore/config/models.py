@@ -11,12 +11,17 @@ class VaultConfig(BaseModel):
     # YOUR career notes, not someone else's.
     owner_name: str = ""
     excluded_folders: list[str] = Field(default_factory=lambda: ["noise"])
-    excluded_extensions: list[str] = Field(default_factory=lambda: [".canvas", ".pdf"])
+    excluded_extensions: list[str] = Field(default_factory=lambda: [".canvas"])
+    # Multi-modal indexing: off by default. Requires pip install markdowncore-ai[multimodal]
+    index_pdf: bool = False
+    index_docx: bool = False
+    index_txt: bool = False
 
 
 class IndexerConfig(BaseModel):
     min_word_count: int = 50
     min_structure_signals: int = 1
+    skip_structure_check_for: list[str] = Field(default_factory=lambda: [".pdf", ".docx", ".txt"])
     manifest_path: str = "~/.mdcore/manifest.json"
     chunk_size: int = 512
     chunk_overlap: int = 64
