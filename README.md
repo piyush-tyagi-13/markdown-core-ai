@@ -35,6 +35,27 @@ Both flows work fully local with Ollama. No subscription LLM API calls. No alway
 
 ---
 
+## Tech Stack
+
+| Layer | Library / Tool | Purpose |
+|---|---|---|
+| Embeddings | `nomic-embed-text` (Ollama), `text-embedding-3-small` (OpenAI), `models/embedding-001` (Gemini), `all-MiniLM-L6-v2` (HuggingFace) | Vector representations of vault chunks |
+| Vector store | [ChromaDB](https://www.trychroma.com/) | Persistent local similarity search |
+| Keyword pre-filter | [rank-bm25](https://github.com/dorianbrown/rank_bm25) | BM25 scoring over candidate chunks before vector retrieval |
+| Markdown parsing | [markdown-it-py](https://github.com/executablebooks/markdown-it-py) | Heading-aware splitting, structure signal detection |
+| LLM backends | Ollama, OpenAI, Anthropic, Gemini, HuggingFace, [llm-keypool](https://pypi.org/project/llm-keypool/) aggregator | Classification, routing, proposal generation, synthesis |
+| LLM abstraction | [LangChain](https://python.langchain.com/) | `BaseChatModel` wrappers, `RunnableLambda` chains for search and ingest |
+| REST API | [FastAPI](https://fastapi.tiangolo.com/) + [LangServe](https://github.com/langchain-ai/langserve) | `/ask`, `/propose` endpoints + auto Swagger UI |
+| MCP server | [mcp](https://pypi.org/project/mcp/) (Model Context Protocol SDK) | Claude Desktop integration via stdio JSON-RPC |
+| TUI | [Textual](https://textual.textualize.io/) + [Rich](https://github.com/Textualize/rich) | Terminal UI, status panels |
+| PDF extraction | [pypdf](https://pypdf.readthedocs.io/) | Page-level text extraction (`[multimodal]` extra) |
+| DOCX extraction | [python-docx](https://python-docx.readthedocs.io/) | Paragraph and table extraction (`[multimodal]` extra) |
+| Config | [Pydantic](https://docs.pydantic.dev/) v2 + YAML | Typed config models, validation |
+| CLI | [Click](https://click.palletsprojects.com/) | Command routing |
+| Observability | [LangSmith](https://smith.langchain.com/) _(optional)_ | Traces every LLM call - token usage, latency, full prompt/response. Set `langsmith_api_key` in config or via `mdcore init`. No eval framework - tracing only. |
+
+---
+
 ## Installation
 
 ```bash
