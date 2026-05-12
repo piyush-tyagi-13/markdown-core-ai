@@ -2,7 +2,12 @@
 
 **Markdown CORE AI - Classification, Organisation, Retrieval & Entry**
 
-`mdcore` is a local, LLM-agnostic knowledge base engine for anyone with a folder of markdown notes. It reads and writes your vault intelligently - retrieve context on demand, ingest new knowledge with automatic classification and routing, all from the terminal or a TUI.
+`mdcore` is a local, LLM-agnostic personal knowledge base engine built for engineers
+and architects managing context across multiple projects, workstreams, and decisions.
+Index your vault of markdown notes, PDFs, Word documents, and plain text files -
+retrieve context on demand, ingest new knowledge with automatic classification and
+routing, all from the terminal, a TUI, a REST API, or directly from Claude Desktop
+via MCP.
 
 **PyPI:** `markdowncore-ai` | **CLI:** `mdcore` | **Version:** 1.1.0
 
@@ -84,13 +89,20 @@ mdcore index    # scan and index your vault
 
 ```bash
 # Search your vault
-mdcore search "kubernetes ingress routing"
-# -> synthesised briefing written to <vault>/mdcore-output/
-# -> copy contents, paste into Claude / ChatGPT / Gemini
+mdcore search "what was the decision on mTLS between services?"
+# -> synthesised briefing with cited sources -> <vault>/mdcore-output/
 
 # Ingest a document
-mdcore ingest --file my-session-summary.md
+mdcore ingest --file arch-review-notes.md
 # -> classifies, routes to right folder, proposes changes -> approve to write
+
+# Start the REST API
+mdcore serve
+# -> POST http://127.0.0.1:8765/ask  {"query": "kubernetes ingress"}
+# -> Swagger UI at http://127.0.0.1:8765/docs
+
+# Connect to Claude Desktop (after adding to claude_desktop_config.json)
+mdcore mcp
 
 # Launch TUI
 mdcore gui
