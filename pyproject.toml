@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "markdowncore-ai"
-version = "1.1.1"
+version = "1.1.2"
 description = "Markdown CORE AI - Classification, Organisation, Retrieval & Entry for your personal markdown knowledge base"
 readme = "README.md"
 license = "MIT"
@@ -38,6 +38,7 @@ dependencies = [
     "langchain-ollama>=0.2",
     "langchain-google-genai>=2",
     "unstructured[md]>=0.15",
+    "mcp>=1.0",
 ]
 
 # Optional backend extras — install only what you need.
@@ -75,9 +76,6 @@ serve = [
     "uvicorn>=0.29",
     "langserve[all]>=0.2",
     "sse-starlette>=1.6",
-]
-mcp = [
-    "mcp>=1.0",
 ]
 aggregator = [
     "llm-keypool>=0.3.1",
