@@ -221,7 +221,11 @@ logging:
     out_path.write_text(config_text, encoding="utf-8")
 
 
-_VERSION = "1.0.10"
+try:
+    from importlib.metadata import version as _pkg_version
+    _VERSION = _pkg_version("markdowncore-ai")
+except Exception:
+    _VERSION = "unknown"
 
 app = typer.Typer(
     name="mdcore",
