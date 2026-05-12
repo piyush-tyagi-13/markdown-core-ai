@@ -1,0 +1,91 @@
+# mdcore retrieval evaluation - 25 questions from your vault
+#
+# Replace every entry below with a real question you would ask your own vault.
+# The question should be something where you already roughly know the answer
+# so you can judge whether the synthesis was useful.
+#
+# expected_topics: loose keywords you expect to appear in a good answer.
+# These are used as soft hints for the LLM judge, not exact match.
+#
+# HOW TO PICK GOOD QUESTIONS:
+# - Use queries that span multiple notes (tests stitching)
+# - Use decision-type queries ("what was decided about X?")
+# - Use project-specific queries that generic search engines couldn't answer
+# - Mix recent notes with older ones
+# - Include at least 3-4 queries where you expect NO good result (tests false positive rate)
+
+questions:
+  - query: "REPLACE ME - e.g. what was the decision on mTLS between services?"
+    expected_topics: ["REPLACE", "ME"]
+
+  - query: "REPLACE ME - e.g. why did we move away from the monorepo structure?"
+    expected_topics: ["REPLACE", "ME"]
+
+  - query: "REPLACE ME"
+    expected_topics: []
+
+  - query: "REPLACE ME"
+    expected_topics: []
+
+  - query: "REPLACE ME"
+    expected_topics: []
+
+  - query: "REPLACE ME"
+    expected_topics: []
+
+  - query: "REPLACE ME"
+    expected_topics: []
+
+  - query: "REPLACE ME"
+    expected_topics: []
+
+  - query: "REPLACE ME"
+    expected_topics: []
+
+  - query: "REPLACE ME"
+    expected_topics: []
+
+  - query: "REPLACE ME"
+    expected_topics: []
+
+  - query: "REPLACE ME"
+    expected_topics: []
+
+  - query: "REPLACE ME"
+    expected_topics: []
+
+  - query: "REPLACE ME"
+    expected_topics: []
+
+  - query: "REPLACE ME"
+    expected_topics: []
+
+  - query: "REPLACE ME"
+    expected_topics: []
+
+  - query: "REPLACE ME"
+    expected_topics: []
+
+  - query: "REPLACE ME"
+    expected_topics: []
+
+  - query: "REPLACE ME"
+    expected_topics: []
+
+  - query: "REPLACE ME"
+    expected_topics: []
+
+  - query: "REPLACE ME"
+    expected_topics: []
+
+  - query: "REPLACE ME"
+    expected_topics: []
+
+  - query: "REPLACE ME - query where you expect NO result (tests false positives)"
+    expected_topics: []
+
+  - query: "REPLACE ME - query where you expect NO result"
+    expected_topics: []
+
+  - query: "REPLACE ME - query where you expect NO result"
+    expected_topics: []
