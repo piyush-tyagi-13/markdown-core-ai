@@ -1355,3 +1355,35 @@ def mcp(
 
     # MCP server runs over stdio - no stdout output (would corrupt the protocol)
     asyncio.run(main())
+
+
+# ── mdcore mcp-serve ──────────────────────────────────────────────────────────
+
+@app.command("mcp-serve")
+def mcp_serve(
+    host: str = typer.Option("127.0.0.1", "--host", help="Host to bind"),
+    port: int = typer.Option(8766, "--port", "-p", help="Port to listen on"),
+    config: Optional[str] = typer.Option(None, "--config", help="Config file path"),
+):
+    """
+    Start the mdcore MCP server with SSE/HTTP transport.
+
+    For clients that connect via URL instead of spawning a subprocess (e.g. Hermes).
+    Add to Hermes config.yaml:
+
+      mcp_servers:
+        mdcore:
+          url: "http://127.0.0.1:8766/sse"
+
+    Run this in a background terminal before starting Hermes:
+
+      mdcore mcp-serve
+    """
+    if config:
+        import os as _os
+        _os.environ["MDCORE_CONFIG_PATH"] = str(config)
+
+    from mdcore.mcp_server.server import run_sse
+    console.print(f"[green]MCP SSE server starting on http://{host}:{port}/sse[/green]")
+    console.print("[dim]Keep this running while Hermes is active. Ctrl+C to stop.[/dim]")
+    run_sse(host=host, port=port)
