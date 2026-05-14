@@ -2164,7 +2164,7 @@ linkify = [
 
 [[package]]
 name = "markdowncore-ai"
-version = "1.0.10"
+version = "1.1.4"
 source = { editable = "." }
 dependencies = [
     { name = "chromadb" },
@@ -2173,12 +2173,14 @@ dependencies = [
     { name = "langchain-google-genai" },
     { name = "langchain-ollama" },
     { name = "markdown-it-py" },
+    { name = "mcp" },
     { name = "pydantic" },
     { name = "python-frontmatter" },
     { name = "pyyaml" },
     { name = "rich" },
     { name = "typer" },
     { name = "unstructured", extra = ["md"] },
+    { name = "uvicorn" },
 ]
 
 [package.optional-dependencies]
@@ -2210,9 +2212,6 @@ gui = [
 huggingface = [
     { name = "langchain-huggingface" },
     { name = "sentence-transformers" },
-]
-mcp = [
-    { name = "mcp" },
 ]
 multimodal = [
     { name = "pypdf" },
@@ -2248,7 +2247,7 @@ requires-dist = [
     { name = "langserve", extras = ["all"], marker = "extra == 'serve'", specifier = ">=0.2" },
     { name = "llm-keypool", marker = "extra == 'aggregator'", specifier = ">=0.3.1" },
     { name = "markdown-it-py", specifier = ">=3" },
-    { name = "mcp", marker = "extra == 'mcp'", specifier = ">=1.0" },
+    { name = "mcp", specifier = ">=1.0" },
     { name = "pydantic", specifier = ">=2" },
     { name = "pypdf", marker = "extra == 'multimodal'", specifier = ">=4.0" },
     { name = "pytest", marker = "extra == 'dev'", specifier = ">=8" },
@@ -2264,9 +2263,10 @@ requires-dist = [
     { name = "twine", marker = "extra == 'dev'", specifier = ">=5.0" },
     { name = "typer", specifier = ">=0.12" },
     { name = "unstructured", extras = ["md"], specifier = ">=0.15" },
+    { name = "uvicorn", specifier = ">=0.29" },
     { name = "uvicorn", marker = "extra == 'serve'", specifier = ">=0.29" },
 ]
-provides-extras = ["openai", "anthropic", "gemini", "huggingface", "all", "multimodal", "serve", "mcp", "aggregator", "gui", "dev"]
+provides-extras = ["openai", "anthropic", "gemini", "huggingface", "all", "multimodal", "serve", "aggregator", "gui", "dev"]
 
 [[package]]
 name = "markupsafe"

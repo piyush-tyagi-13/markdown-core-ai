@@ -393,6 +393,8 @@ The chain implementation uses `RunnableLambda` wrapping the existing two-phase r
 
 mdcore exposes its vault as MCP tools that any MCP-compatible client can call autonomously during a conversation. MCP is bundled in core - no extra install needed.
 
+No background server required. The MCP client spawns and manages the `mdcore mcp` process automatically on demand.
+
 ### Tools exposed
 
 | Tool | Description |
