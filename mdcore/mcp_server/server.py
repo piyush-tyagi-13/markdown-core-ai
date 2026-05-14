@@ -7,6 +7,8 @@ from mcp.server import Server
 from mcp.server.stdio import stdio_server
 from mcp import types
 
+from pathlib import Path
+
 from mdcore.config.loader import load_config, DEFAULT_CONFIG_PATH
 from mdcore.serve.chain import build_search_chain, build_ingest_chain
 from mdcore.store.vector_store import VectorStore
@@ -73,6 +75,30 @@ async def list_tools() -> list[types.Tool]:
             ),
             inputSchema={"type": "object", "properties": {}, "required": []},
         ),
+        types.Tool(
+            name="index_vault",
+            description=(
+                "Scan the vault for new or modified files and optionally reindex them. "
+                "Call with dry_run=true first to get a summary of what would change (counts of new, "
+                "modified, and deleted files). Show the summary to the user and ask for confirmation "
+                "before calling again with dry_run=false to actually run the indexing. "
+                "Never call with dry_run=false without explicit user approval."
+            ),
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "dry_run": {
+                        "type": "boolean",
+                        "description": (
+                            "If true (default), scan and return a summary without writing anything. "
+                            "If false, actually index all new/modified files."
+                        ),
+                        "default": True,
+                    }
+                },
+                "required": [],
+            },
+        ),
     ]
 
 
@@ -84,6 +110,8 @@ async def call_tool(name: str, arguments: dict[str, Any]) -> list[types.TextCont
         return await _handle_ingest(arguments)
     elif name == "vault_status":
         return await _handle_status()
+    elif name == "index_vault":
+        return await _handle_index(arguments)
     else:
         raise ValueError(f"Unknown tool: {name}")
 
@@ -156,6 +184,89 @@ async def _handle_status() -> list[types.TextContent]:
     )
 
     return [types.TextContent(type="text", text=output)]
+
+
+async def _handle_index(args: dict[str, Any]) -> list[types.TextContent]:
+    dry_run = args.get("dry_run", True)
+
+    loop = asyncio.get_event_loop()
+
+    def _scan_diff():
+        from mdcore.core.indexer.vault_scanner import VaultScanner
+        from mdcore.core.indexer.manifest_manager import ManifestManager
+
+        scanner = VaultScanner(_cfg.vault, _cfg.indexer)
+        manifest = ManifestManager(_cfg.manifest, _cfg.vault)
+        eligible = scanner.scan()
+        diff = manifest.diff(eligible)
+        return eligible, diff
+
+    eligible, diff = await loop.run_in_executor(None, _scan_diff)
+
+    summary = (
+        f"**Vault Index Summary**\n\n"
+        f"Total eligible files: {len(eligible)}\n"
+        f"New (unindexed):      {len(diff.new_files)}\n"
+        f"Modified (stale):     {len(diff.modified_files)}\n"
+        f"Deleted:              {len(diff.deleted_files)}\n"
+        f"Delta total:          {diff.total_changes} files will change\n"
+    )
+
+    if diff.total_changes == 0:
+        return [types.TextContent(type="text", text="Index is up to date - nothing to do.")]
+
+    if dry_run:
+        return [types.TextContent(
+            type="text",
+            text=summary + "\n_Dry run only. Call index_vault with dry_run=false to actually index._",
+        )]
+
+    # Actually index
+    def _run_index():
+        from mdcore.core.indexer.vault_scanner import VaultScanner
+        from mdcore.core.indexer.manifest_manager import ManifestManager
+        from mdcore.core.indexer.document_loader import DocumentLoader
+        from mdcore.core.indexer.text_splitter import TextSplitter
+        from mdcore.core.indexer.index_writer import IndexWriter
+        from mdcore.core.indexer.embedding_engine import EmbeddingEngine
+
+        scanner = VaultScanner(_cfg.vault, _cfg.indexer)
+        manifest = ManifestManager(_cfg.manifest, _cfg.vault)
+        loader = DocumentLoader(_cfg.vault)
+        splitter = TextSplitter(_cfg.indexer)
+        store = VectorStore(_cfg.vector_store)
+        engine = EmbeddingEngine(_cfg.embeddings)
+        writer = IndexWriter(store, engine, _cfg.indexer)
+
+        eligible = scanner.scan()
+        diff = manifest.diff(eligible)
+
+        indexed, skipped = 0, 0
+        for path in diff.new_files + diff.modified_files:
+            try:
+                doc = loader.load(path)
+                chunks = splitter.split(doc)
+                source_file = doc.metadata.get("source_file", str(path))
+                writer.write(chunks, source_file)
+                manifest.update(path)
+                indexed += 1
+            except Exception:
+                skipped += 1
+
+        for key in diff.deleted_files:
+            store.delete(key)
+
+        return indexed, skipped, len(diff.deleted_files)
+
+    indexed, skipped, deleted = await loop.run_in_executor(None, _run_index)
+
+    result = (
+        f"**Indexing complete**\n\n"
+        f"Indexed:  {indexed} files\n"
+        f"Deleted:  {deleted} entries removed\n"
+        f"Skipped:  {skipped} files (errors)\n"
+    )
+    return [types.TextContent(type="text", text=result)]
 
 
 async def main():

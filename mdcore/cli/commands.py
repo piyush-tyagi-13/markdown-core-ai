@@ -578,8 +578,25 @@ def index(
         console.print("[green]Index is up to date — nothing to do.[/green]")
         return
 
-    # Show diff
-    table = Table(title="Index Delta", box=box.ROUNDED)
+    # Summary panel
+    summary = Table(box=box.SIMPLE, show_header=False, pad_edge=False)
+    summary.add_column("Label", style="dim")
+    summary.add_column("Count", justify="right")
+    summary.add_row("Total eligible", str(len(eligible)))
+    summary.add_row("─" * 20, "─" * 6)
+    summary.add_row("[green]New (unindexed)[/green]", f"[green]{len(diff.new_files)}[/green]")
+    summary.add_row("[yellow]Modified (stale)[/yellow]", f"[yellow]{len(diff.modified_files)}[/yellow]")
+    summary.add_row("[red]Deleted[/red]", f"[red]{len(diff.deleted_files)}[/red]")
+    summary.add_row("─" * 20, "─" * 6)
+    summary.add_row("[bold]Delta total[/bold]", f"[bold]{diff.total_changes}[/bold]")
+    console.print(Panel(summary, title="[bold cyan]Vault Scan Summary[/bold cyan]", expand=False))
+
+    # Delta table
+    table = Table(
+        title=f"Index Delta  ({diff.total_changes} files)",
+        box=box.ROUNDED,
+        caption=f"{len(diff.new_files)} new · {len(diff.modified_files)} modified · {len(diff.deleted_files)} deleted",
+    )
     table.add_column("Status", style="cyan")
     table.add_column("File")
     for p in diff.new_files:

@@ -9,7 +9,7 @@ retrieve context on demand, ingest new knowledge with automatic classification a
 routing, all from the terminal, a TUI, a REST API, or directly from Claude Desktop
 via MCP.
 
-**PyPI:** `markdowncore-ai` | **CLI:** `mdcore` | **Version:** 1.1.0
+**PyPI:** `markdowncore-ai` | **CLI:** `mdcore` | **Version:** 1.1.4
 
 ---
 
@@ -135,7 +135,7 @@ mdcore gui
 
 ```bash
 mdcore init                        # Interactive setup wizard
-mdcore index                       # Delta index - scan, diff, confirm, index
+mdcore index                       # Delta index - scan, show summary, diff, confirm, index
 mdcore index --force               # Wipe everything and reindex from scratch
 mdcore search <topic>              # Retrieve + synthesise briefing (Flow A)
 mdcore search <topic> --raw        # Retrieve raw excerpts, skip synthesis
@@ -181,7 +181,7 @@ uv tool install "markdowncore-ai[anthropic]"
 uv tool install "markdowncore-ai[all]"           # every backend
 uv tool install "markdowncore-ai[multimodal]"    # PDF, DOCX, TXT indexing
 uv tool install "markdowncore-ai[serve]"         # REST API server
-uv tool install "markdowncore-ai[mcp]"           # MCP server for Claude Desktop
+uv tool install "markdowncore-ai"                # MCP server bundled in core
 ```
 
 ### Aggregator backend
@@ -389,33 +389,9 @@ The chain implementation uses `RunnableLambda` wrapping the existing two-phase r
 
 ---
 
-## MCP Server (Claude Desktop Integration)
+## MCP Server
 
-mdcore exposes its vault as MCP tools that Claude Desktop (and any MCP-compatible client) can call autonomously during a conversation.
-
-```bash
-pip install 'markdowncore-ai[mcp]'
-```
-
-Add to `~/Library/Application Support/Claude/claude_desktop_config.json` (macOS) or `%APPDATA%\Claude\claude_desktop_config.json` (Windows):
-
-```json
-{
-  "mcpServers": {
-    "mdcore": {
-      "command": "mdcore",
-      "args": ["mcp"],
-      "env": {
-        "MDCORE_CONFIG_PATH": "/Users/you/.mdcore/config.yaml"
-      }
-    }
-  }
-}
-```
-
-Restart Claude Desktop. mdcore appears as a connected tool. Ask Claude:
-- *"What do my notes say about the payments architecture?"*
-- *"Save this meeting summary to my vault"*
+mdcore exposes its vault as MCP tools that any MCP-compatible client can call autonomously during a conversation. MCP is bundled in core - no extra install needed.
 
 ### Tools exposed
 
@@ -424,16 +400,63 @@ Restart Claude Desktop. mdcore appears as a connected tool. Ask Claude:
 | `search_vault` | Search vault, return synthesised answer with cited sources |
 | `ingest_note` | Classify content and propose where to save it (does not write automatically) |
 | `vault_status` | Current index stats - chunk count, file types, backends |
+| `index_vault` | Scan vault for new/modified files. Call with `dry_run=true` first to get a count summary, then `dry_run=false` to actually index after user confirmation. |
 
-### Multiple vaults
+### Claude Desktop
 
-Expose separate work and personal vaults as distinct tools by running two MCP server processes with different `--config` paths, or configure vault-scoped tool variants directly in `mcp_server/server.py`.
+Add to `~/Library/Application Support/Claude/claude_desktop_config.json` (macOS) or `%APPDATA%\Claude\claude_desktop_config.json` (Windows):
 
-### Smoke test (without Claude Desktop)
+```json
+{
+  "mcpServers": {
+    "mdcore": {
+      "command": "mdcore",
+      "args": ["mcp"]
+    }
+  }
+}
+```
+
+Restart Claude Desktop. Ask Claude:
+- *"What do my notes say about the payments architecture?"*
+- *"Save this meeting summary to my vault"*
+- *"Check if my vault index needs updating"*
+
+### Hermes Agent (NousResearch/hermes-agent)
+
+mdcore works as a native MCP server for [Hermes agent](https://github.com/NousResearch/hermes-agent). Add to `~/.hermes/config.yaml`:
+
+```yaml
+mcp_servers:
+  mdcore:
+    command: "/Users/you/.local/bin/mdcore"
+    args: ["mcp"]
+```
+
+Hermes registers the tools as `mcp_mdcore_search_vault`, `mcp_mdcore_ingest_note`, `mcp_mdcore_vault_status`, and `mcp_mdcore_index_vault`. Restart Hermes after editing config.
+
+**Requires a model with function calling support.** Configure a direct provider in `~/.hermes/config.yaml`:
+
+```yaml
+model:
+  default: gemini-2.5-flash
+  provider: google
+  api_key: '<your-google-api-key>'
+```
+
+Example prompts via Hermes:
+- *"Search my vault for notes on Kubernetes ingress"*
+- *"Check if my vault index needs updating"* - Hermes calls `index_vault(dry_run=true)`, shows counts, asks for confirmation before indexing
+
+### Smoke test (without a client)
 
 ```bash
 echo '{"jsonrpc":"2.0","id":1,"method":"tools/list","params":{}}' | mdcore mcp
 ```
+
+### Multiple vaults
+
+Run two MCP server processes with different `--config` paths to expose separate work and personal vaults as distinct toolsets.
 
 
 ---
@@ -454,4 +477,4 @@ llm:
 
 ---
 
-*mdcore - Markdown CORE AI v1.1.0*
+*mdcore - Markdown CORE AI v1.1.4*
