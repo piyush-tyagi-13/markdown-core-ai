@@ -15,77 +15,64 @@
 # - Include at least 3-4 queries where you expect NO good result (tests false positive rate)
 
 questions:
-  - query: "REPLACE ME - e.g. what was the decision on mTLS between services?"
-    expected_topics: ["REPLACE", "ME"]
+  # --- Xbox Ally X / SteamOS projects ---
+  - query: "how does the Ally Vibe Control plugin control grip motor vibration on the ASUS Ally X?"
+    expected_topics: ["sysfs", "asus_ally_hid", "motor", "intensity", "decky"]
 
-  - query: "REPLACE ME - e.g. why did we move away from the monorepo structure?"
-    expected_topics: ["REPLACE", "ME"]
+  # --- mdcore / personal projects ---
+  - query: "what is mdcore and what problem does it solve?"
+    expected_topics: ["knowledge base", "markdown", "RAG", "vault", "retrieval"]
 
-  - query: "REPLACE ME"
+  # --- Lloyds / CMAS-CBS work ---
+  - query: "what is the environment design overview for the CMAS-CBS integration?"
+    expected_topics: ["environment", "CMAS", "CBS", "DevOps", "design"]
+
+  # --- Java / Programming notes ---
+  - query: "what is the difference between JDK, JRE, and JVM?"
+    expected_topics: ["JDK", "JRE", "JVM", "compile", "runtime"]
+
+  # --- Expect NO result (false positive test) ---
+  - query: "what are my notes on Rust ownership and borrow checker patterns?"
     expected_topics: []
 
-  - query: "REPLACE ME"
-    expected_topics: []
-
-  - query: "REPLACE ME"
-    expected_topics: []
-
-  - query: "REPLACE ME"
-    expected_topics: []
-
-  - query: "REPLACE ME"
-    expected_topics: []
-
-  - query: "REPLACE ME"
-    expected_topics: []
-
-  - query: "REPLACE ME"
-    expected_topics: []
-
-  - query: "REPLACE ME"
-    expected_topics: []
-
-  - query: "REPLACE ME"
-    expected_topics: []
-
-  - query: "REPLACE ME"
-    expected_topics: []
-
-  - query: "REPLACE ME"
-    expected_topics: []
-
-  - query: "REPLACE ME"
-    expected_topics: []
-
-  - query: "REPLACE ME"
-    expected_topics: []
-
-  - query: "REPLACE ME"
-    expected_topics: []
-
-  - query: "REPLACE ME"
-    expected_topics: []
-
-  - query: "REPLACE ME"
-    expected_topics: []
-
-  - query: "REPLACE ME"
-    expected_topics: []
-
-  - query: "REPLACE ME"
-    expected_topics: []
-
-  - query: "REPLACE ME"
-    expected_topics: []
-
-  - query: "REPLACE ME"
-    expected_topics: []
-
-  - query: "REPLACE ME - query where you expect NO result (tests false positives)"
-    expected_topics: []
-
-  - query: "REPLACE ME - query where you expect NO result"
-    expected_topics: []
-
-  - query: "REPLACE ME - query where you expect NO result"
-    expected_topics: []
+  # --- commented out (uncomment to run full 25-question eval) ---
+  #- query: "what is the sysfs write path used for vibration control on the Ally X?"
+  #  expected_topics: ["sysfs", "hidraw", "LEFT", "RIGHT", "kernel"]
+  #- query: "how does Ally Vibe Control persist settings across reboots?"
+  #  expected_topics: ["SettingsManager", "startup", "Decky", "persist"]
+  #- query: "what audio fix did I note for the Xbox Ally X on SteamOS?"
+  #  expected_topics: ["audio", "ally", "steamos", "fix"]
+  #- query: "what VRR notes do I have about the Xbox Ally X on SteamOS?"
+  #  expected_topics: ["VRR", "variable refresh", "ally", "steamos"]
+  #- query: "how does mdcore classify and route new notes during ingestion?"
+  #  expected_topics: ["classification", "routing", "folder", "proposal", "similarity"]
+  #- query: "what LLM backends does mdcore support?"
+  #  expected_topics: ["ollama", "openai", "gemini", "aggregator", "langchain"]
+  #- query: "what free LLM providers have capable API keys for the aggregator backend?"
+  #  expected_topics: ["groq", "mistral", "openrouter", "cerebras", "free tier"]
+  #- query: "what is the hermes agent and what providers does it support?"
+  #  expected_topics: ["hermes", "NousResearch", "MCP", "provider", "tool"]
+  #- query: "what LLM providers are available through my keypool setup?"
+  #  expected_topics: ["groq", "mistral", "openrouter", "gemini", "keypool"]
+  #- query: "what was proposed for the Apigee dev environment for CMAS-CBS?"
+  #  expected_topics: ["Apigee", "dev", "environment", "proposal", "CBS"]
+  #- query: "when does Java autobox and unbox between int and Integer?"
+  #  expected_topics: ["autoboxing", "unboxing", "int", "Integer", "implicit"]
+  #- query: "what does the final keyword prevent in Java?"
+  #  expected_topics: ["final", "variable", "method", "class", "immutable"]
+  #- query: "what is the difference between stack and heap memory in Java?"
+  #  expected_topics: ["stack", "heap", "memory", "reference", "primitive"]
+  #- query: "what are static factory methods and why prefer them over constructors in Effective Java?"
+  #  expected_topics: ["static factory", "constructor", "Item 1", "Effective Java"]
+  #- query: "how does Java pass by value for object references work?"
+  #  expected_topics: ["pass by value", "reference", "object", "Java"]
+  #- query: "what is widening vs narrowing conversion in Java and when is each implicit?"
+  #  expected_topics: ["widening", "narrowing", "implicit", "explicit", "cast"]
+  #- query: "what are the class anatomy components - fields, constructors, methods, initialiser blocks?"
+  #  expected_topics: ["field", "constructor", "method", "initialiser", "class anatomy"]
+  #- query: "what does the var keyword do in Java 10 and what are its limitations?"
+  #  expected_topics: ["var", "type inference", "Java 10", "local variable"]
+  #- query: "what did I write about Kubernetes ingress controller configuration?"
+  #  expected_topics: []
+  #- query: "what are my notes on React hooks and state management patterns?"
+  #  expected_topics: []

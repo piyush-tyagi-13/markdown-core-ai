@@ -161,7 +161,7 @@ def main() -> None:
 
     from mdcore.llm.llm_layer import LLMLayer
     llm_layer = LLMLayer(cfg.llm)
-    eval_relevance._llm = llm_layer._model  # type: ignore[attr-defined]
+    eval_relevance._llm = llm_layer._get_llm()  # type: ignore[attr-defined]
 
     def target(inputs: dict[str, Any]) -> dict[str, Any]:
         return chain.invoke(inputs)
@@ -178,15 +178,20 @@ def main() -> None:
         metadata={"mdcore_version": "1.1.0", "vault": cfg.vault.path},
     )
 
+    experiment_name = getattr(results, "experiment_name", None)
     scores: dict[str, list[float]] = {}
-    for r in results:
-        for fb in (r.get("feedback") or []):
+    if experiment_name:
+        run_ids = [str(r.id) for r in client.list_runs(project_name=experiment_name, run_type="chain")]
+        for fb in client.list_feedback(run_ids=run_ids, feedback_key=["non_empty", "has_sources", "relevance"]):
             scores.setdefault(fb.key, []).append(fb.score or 0)
 
     print("\n--- Results ---")
-    for key, vals in scores.items():
-        pct = sum(vals) / len(vals) * 100 if vals else 0
-        print(f"  {key:<20} {pct:5.1f}%  ({int(sum(vals))}/{len(vals)})")
+    if scores:
+        for key, vals in scores.items():
+            pct = sum(vals) / len(vals) * 100 if vals else 0
+            print(f"  {key:<20} {pct:5.1f}%  ({int(sum(vals))}/{len(vals)})")
+    else:
+        print("  (check LangSmith UI — score parsing requires experiment name)")
 
     project = cfg.llm.langsmith_project or "mdcore"
     print(f"\nFull traces: https://smith.langchain.com/o/default/projects/p/{project}")
