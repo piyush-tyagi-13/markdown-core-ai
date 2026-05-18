@@ -69,7 +69,10 @@ def _aggregator_pool_lines(category: str) -> list[str]:
         if not k:
             return [f"  *(no keys registered for '{category}')*"]
         cd = k.get("cooldown_until")
-        cd_str = f"cooldown until {cd[:19]}" if cd else "available"
+        from datetime import datetime, timezone
+        cd_dt = datetime.fromisoformat(cd.replace("Z", "+00:00")) if cd else None
+        is_active = cd_dt and cd_dt > datetime.now(timezone.utc)
+        cd_str = f"cooldown until {cd[:19]}" if is_active else "available"
         return [
             f"  **{k['provider']}** `{k['model']}` "
             f"slot {k['cycle_position']}/{k['rotate_every']} "
@@ -1087,7 +1090,7 @@ class MdCoreApp(App):
             def _kv(key: str, val: str) -> Text:
                 t = Text()
                 t.append(f"  {key:<22}", style="dim cyan")
-                t.append(val)
+                t.append_text(Text.from_markup(val))
                 return t
 
             llm_label = _backend_label(cfg.llm.backend, cfg.llm.model, cfg.llm.aggregator_category)
@@ -1142,9 +1145,12 @@ class MdCoreApp(App):
                     ).current_key()
                     if k:
                         cd = k.get("cooldown_until")
+                        from datetime import datetime, timezone
+                        cd_dt = datetime.fromisoformat(cd.replace("Z", "+00:00")) if cd else None
+                        is_active = cd_dt and cd_dt > datetime.now(timezone.utc)
                         cd_text = (
                             Text(f"  cooldown until {cd[:19]}", style="yellow")
-                            if cd
+                            if is_active
                             else Text("  available", style="green")
                         )
                         renderables += [
