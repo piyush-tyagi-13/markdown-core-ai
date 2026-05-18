@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "markdowncore-ai"
-version = "1.1.4"
+version = "1.1.5"
 description = "Markdown CORE AI - Classification, Organisation, Retrieval & Entry for your personal markdown knowledge base"
 readme = "README.md"
 license = "MIT"
@@ -40,6 +40,7 @@ dependencies = [
     "unstructured[md]>=0.15",
     "mcp>=1.0",
     "uvicorn>=0.29",
+    "textual>=0.80",
 ]
 
 # Optional backend extras — install only what you need.
