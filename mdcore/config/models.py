@@ -56,6 +56,11 @@ class VectorStoreConfig(BaseModel):
 class RetrieverConfig(BaseModel):
     keyword_prefilter: bool = True
     keyword_prefilter_min_score: float = 0.3
+    # How the keyword pre-filter selects candidates:
+    #   "hybrid" — BM25 over chunk content + filename/folder path matches (default)
+    #   "bm25"   — BM25 over chunk content only
+    #   "path"   — legacy term-presence ratio over filename/folder only
+    keyword_prefilter_mode: Literal["hybrid", "bm25", "path"] = "hybrid"
     top_k: int = 15
     similarity_threshold: float = 0.65
 

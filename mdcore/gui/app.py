@@ -508,8 +508,8 @@ class MdCoreApp(App):
             store = self._get_store()
             engine = self._get_engine()
 
-            all_metadata = store.all_metadata()
-            if not all_metadata:
+            all_chunks = store.all_chunks()
+            if not all_chunks:
                 self.call_from_thread(
                     self.query_one("#search-md", Markdown).update,
                     "**Index is empty.** Run `mdcore index` first."
@@ -521,8 +521,9 @@ class MdCoreApp(App):
                 prefilter = KeywordPreFilter(
                     cfg.retriever.keyword_prefilter_min_score,
                     owner_name=cfg.vault.owner_name,
+                    mode=cfg.retriever.keyword_prefilter_mode,
                 )
-                candidate_sources = prefilter.filter(topic, all_metadata) or None
+                candidate_sources = prefilter.filter(topic, all_chunks) or None
 
             vector_query = topic
             if cfg.vault.owner_name:

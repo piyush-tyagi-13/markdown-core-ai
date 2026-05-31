@@ -30,14 +30,15 @@ def build_search_chain(cfg: MdCoreConfig):
     prefilter = KeywordPreFilter(
         min_score=cfg.retriever.keyword_prefilter_min_score,
         owner_name=cfg.vault.owner_name,
+        mode=cfg.retriever.keyword_prefilter_mode,
     )
     searcher = VectorSearcher(vector_store, embedding_engine, cfg.retriever)
 
     def retrieve_and_synthesise(inputs: dict[str, Any]) -> dict[str, Any]:
         query = inputs["query"]
 
-        all_meta = vector_store.all_metadata()
-        candidate_sources = prefilter.filter(query, all_meta) if cfg.retriever.keyword_prefilter else None
+        all_chunks = vector_store.all_chunks()
+        candidate_sources = prefilter.filter(query, all_chunks) if cfg.retriever.keyword_prefilter else None
 
         chunks = searcher.search(query, candidate_sources)
 

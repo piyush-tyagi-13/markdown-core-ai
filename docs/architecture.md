@@ -117,10 +117,11 @@ KeywordPreFilter (optional heuristic)
 
 **1. KeywordPreFilter** (`core/retriever/keyword_prefilter.py`)
 
-Fast heuristic that runs before embedding:
-- Scores each indexed file by how many query terms appear in its filename and folder path
-- Applies a penalty (0.2×) to files in "other person" folders (heuristic: folder names that look like proper nouns that are not the vault owner)
-- Files scoring below `min_score` are excluded from vector search candidates
+Lexical pre-filter that runs before vector search, selecting candidate files. Default mode is `hybrid`:
+- **BM25** (`rank_bm25.BM25Okapi`) over chunk *content* — files whose body lexically matches the query become candidates, ranked by BM25 and capped to the top 50
+- **Path matching** — files whose filename/folder contain query terms (term-presence ratio ≥ `min_score`)
+- `hybrid` takes the union of both; `bm25` and `path` modes use one signal only (config: `keyword_prefilter_mode`)
+- When the owner name is in the query, files under another person's folder are excluded (cross-person contamination guard)
 
 This reduces vector search scope and prevents cross-person retrieval contamination.
 
@@ -129,7 +130,7 @@ This reduces vector search scope and prevents cross-person retrieval contaminati
 - Embeds the query via `engine.embed_query(query)`
 - Searches ChromaDB for top-k chunks, filtered to candidate sources (from prefilter if enabled)
 - Filters results by `similarity_threshold` (default: 0.65, cosine)
-- **Keyword rescue phase**: for candidate files that returned zero chunks from semantic search (vocabulary mismatch), retries at 75% of the similarity threshold
+- **Keyword rescue phase**: for candidate files that returned zero chunks from semantic search (vocabulary mismatch), retries at a *relaxed* threshold of `similarity_threshold * 0.75` (e.g. 0.65 → ~0.49). The bar is lowered, not raised — a chunk scoring 0.55 fails phase 1 (< 0.65) but is rescued in phase 2 (≥ 0.49).
 
 **3. ChunkGrouper** (`core/retriever/chunk_grouper.py`)
 

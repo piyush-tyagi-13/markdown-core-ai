@@ -41,7 +41,7 @@ Both flows work fully local with Ollama. No subscription LLM API calls. No alway
 |---|---|---|
 | Embeddings | `nomic-embed-text` (Ollama), `text-embedding-3-small` (OpenAI), `models/embedding-001` (Gemini), `all-MiniLM-L6-v2` (HuggingFace) | Vector representations of vault chunks |
 | Vector store | [ChromaDB](https://www.trychroma.com/) | Persistent local similarity search |
-| Keyword pre-filter | [rank-bm25](https://github.com/dorianbrown/rank_bm25) | BM25 scoring over candidate chunks before vector retrieval |
+| Keyword pre-filter | [rank-bm25](https://github.com/dorianbrown/rank_bm25) | BM25 over chunk content + filename/folder matching (hybrid) before vector retrieval |
 | Markdown parsing | [markdown-it-py](https://github.com/executablebooks/markdown-it-py) | Heading-aware splitting, structure signal detection |
 | LLM backends | Ollama, OpenAI, Anthropic, Gemini, HuggingFace, [llm-keypool](https://pypi.org/project/llm-keypool/) aggregator | Classification, routing, proposal generation, synthesis |
 | LLM abstraction | [LangChain](https://python.langchain.com/) | `BaseChatModel` wrappers, `RunnableLambda` chains for search and ingest |
@@ -293,7 +293,7 @@ mdcore ingest --file note.md --models ~/.mdcore/models-cheap.yaml
 
 | Phase | LLM? | Notes |
 |---|---|---|
-| Keyword pre-filter | No | BM25 scoring |
+| Keyword pre-filter | No | BM25 over content + path (hybrid) |
 | Vector search | No | Embedding lookup |
 | Chunk assembly | No | Pure text |
 | **Synthesis** | **Yes** - `synthesise_model` | Skip with `--raw` for zero LLM calls |

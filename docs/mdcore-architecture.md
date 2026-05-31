@@ -84,13 +84,13 @@ flowchart TD
     D["store.all_metadata()\nChromaDB READ: all chunk metadata"] --> E
 
     E{keyword_prefilter\nenabled?}
-    E -- yes --> F["KeywordPreFilter.filter(topic, all_metadata)\nBM25-like keyword scoring on filename + folder_path\nStrips owner_name words before scoring\nApplies _OTHER_PERSON_PENALTY=0.2x\nReturns set[str] of source_files above min_score=0.3"]
+    E -- yes --> F["KeywordPreFilter.filter(topic, all_chunks) [mode=hybrid]\nBM25 (rank_bm25) over chunk content, top-50 by score\n+ term-presence match on filename + folder_path (min_score=0.3)\nStrips owner_name words; excludes other-person folders\nReturns set[str] of candidate source_files"]
     E -- no --> G
     F --> G
 
     G["Strip owner_name words from vector_query\nthey don't appear in file content"] --> H
 
-    H["VectorSearcher.search(query, candidate_sources)\nPhase 1: embed_query → store.search(k=top_k*2 if candidates else top_k)\n  → filter to candidates → trim to top_k → filter by similarity_threshold=0.65\nPhase 2 rescue: for candidate files with zero Phase 1 chunks,\n  store.search_in_sources() at 75% of similarity_threshold"] --> I
+    H["VectorSearcher.search(query, candidate_sources)\nPhase 1: embed_query → store.search(k=top_k*2 if candidates else top_k)\n  → filter to candidates → trim to top_k → filter by similarity_threshold=0.65\nPhase 2 rescue: for candidate files with zero Phase 1 chunks,\n  store.search_in_sources() at similarity_threshold*0.75 (relaxed/lower, 0.65→~0.49)"] --> I
 
     I["group_by_source(chunks)\ndict[source_file, list[Document]] sorted by chunk_index"] --> J
 
@@ -213,7 +213,7 @@ mdcore/
 │   │   ├── chunk_stitcher.py         stitch(): joins adjacent chunks into passages
 │   │   ├── context_assembler.py      assemble(): applies word budget, builds AssembledContext
 │   │   ├── context_formatter.py      format_context(), raw_text_for_synthesis()
-│   │   ├── keyword_prefilter.py      KeywordPreFilter: BM25-like scoring, persona detection
+│   │   ├── keyword_prefilter.py      KeywordPreFilter: BM25 over content + path (hybrid), persona detection
 │   │   ├── source_ranker.py          rank_sources(): sort by avg similarity
 │   │   └── vector_searcher.py        VectorSearcher: two-phase vector search
 │   ├── ingester/
@@ -661,7 +661,8 @@ Phase 1:
 
 Phase 2 (rescue):
   for any candidate_source files with ZERO chunks in Phase 1:
-    store.search_in_sources() at 75% of similarity_threshold
+    store.search_in_sources() at relaxed threshold = similarity_threshold * 0.75
+    (0.65 → ~0.49; bar LOWERED not raised, so near-miss chunks like 0.55 get rescued)
     (recovers files that were in keyword candidates but missed vector threshold)
 ```
 
