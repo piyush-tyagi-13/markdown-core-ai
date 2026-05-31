@@ -716,7 +716,7 @@ All behaviour tuned via `~/.mdcore/config.yaml` (overridden per-environment by `
 |---|---|
 | `indexer` | `chunk_size`, `chunk_overlap`, `min_word_count`, `heading_aware_splitting` |
 | `embeddings` | `backend`, `api_model`, `api_key` |
-| `retriever` | `top_k`, `similarity_threshold`, `context_block_max_words`, `keyword_prefilter` |
+| `retriever` | `top_k`, `similarity_threshold`, `context_block_max_words`, `keyword_prefilter`, `keyword_prefilter_mode` |
 | `ingester` | `similarity_threshold_high`, `similarity_threshold_low`, `conflict_similarity_min/max` |
 | `llm` | `backend`, `model`, `synthesise_model`, `fallback_backend`, `aggregator_category` |
 | `writer` | `append_position`, `backup.enabled` |
@@ -743,7 +743,7 @@ mdcore/
 │   │   ├── embedding_engine.py      LangChain embeddings wrapper + cache
 │   │   └── index_writer.py          Batch upsert orchestrator
 │   ├── retriever/
-│   │   ├── keyword_prefilter.py     Keyword + owner-aware candidate filter
+│   │   ├── keyword_prefilter.py     BM25 content + path candidate filter (owner-aware, hybrid)
 │   │   ├── vector_searcher.py       Embed query + search + rescue phase
 │   │   ├── chunk_grouper.py         Group chunks by source
 │   │   ├── chunk_stitcher.py        Bridge adjacent chunk gaps
