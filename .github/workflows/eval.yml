@@ -17,6 +17,24 @@ jobs:
       - name: Install package + extras needed by tests
         # serve extra provides fastapi for test_server.py
         run: pip install -e ".[serve]" pytest
+      - name: Seed a minimal config
+        # mdcore/mcp_server/server.py calls load_config() at import time, so the
+        # module (and its tests) cannot be imported without a config present.
+        # ollama backend needs no heavy deps or network to construct.
+        run: |
+          mkdir -p ~/.mdcore
+          cat > ~/.mdcore/config.yaml <<'YAML'
+          vault:
+            path: ./tests/fixtures/eval/vault
+          embeddings:
+            backend: ollama
+            local_model: nomic-embed-text
+          llm:
+            backend: ollama
+            model: none
+          vector_store:
+            persist_path: ./.eval-index/chroma_db
+          YAML
       - name: Run unit tests
         # Aggregator tests need the optional llm_keypool dependency; skip them here.
         run: pytest -q --ignore=tests/test_llm_layer_aggregator.py
