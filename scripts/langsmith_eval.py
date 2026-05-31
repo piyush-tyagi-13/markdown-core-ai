@@ -175,7 +175,7 @@ def main() -> None:
         evaluators=[eval_non_empty, eval_has_sources, eval_relevance],
         experiment_prefix=EXPERIMENT_PREFIX,
         client=client,
-        metadata={"mdcore_version": "1.1.0", "vault": cfg.vault.path},
+        metadata={"mdcore_version": "1.2.0", "vault": cfg.vault.path},
     )
 
     experiment_name = getattr(results, "experiment_name", None)

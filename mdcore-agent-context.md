@@ -14,7 +14,7 @@
 ## Two Flows
 
 ### Flow A - Retrieval (`mdcore search <topic>`)
-1. Keyword pre-filter (BM25)
+1. Keyword pre-filter (BM25 over chunk content + filename/folder path, hybrid)
 2. Vector search (ChromaDB)
 3. Chunk stitching + context assembly
 4. LLM synthesis - reformats excerpts into a cited briefing

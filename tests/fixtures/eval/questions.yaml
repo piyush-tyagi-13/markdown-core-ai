@@ -1,0 +1,45 @@
+# Fixture eval questions for the offline CI retrieval gate.
+# Each query should retrieve its expected_source note. Synthetic vault — see vault/.
+# expected_source: the source_file (relative path) that MUST appear in retrieved results.
+# expected_topics: soft keyword hints (used by the optional LangSmith LLM judge, not the gate).
+
+questions:
+  - query: "how do pods on different nodes talk to each other"
+    expected_source: "kubernetes-networking.md"
+    expected_topics: ["pod", "node", "CNI", "service", "network"]
+
+  - query: "streaming replication and write-ahead log shipping"
+    expected_source: "postgres-replication.md"
+    expected_topics: ["WAL", "standby", "primary", "replication slot"]
+
+  - query: "event loop and awaiting coroutines without blocking"
+    expected_source: "python-asyncio.md"
+    expected_topics: ["event loop", "coroutine", "await", "gather"]
+
+  - query: "define multiple containers and a private network in one file"
+    expected_source: "docker-compose.md"
+    expected_topics: ["service", "yaml", "depends_on", "network"]
+
+  - query: "borrow checker mutable references and lifetimes"
+    expected_source: "rust-ownership.md"
+    expected_topics: ["ownership", "borrow", "lifetime", "reference"]
+
+  - query: "useEffect dependency array and cleanup on unmount"
+    expected_source: "react-hooks.md"
+    expected_topics: ["useEffect", "dependency", "cleanup", "mount"]
+
+  - query: "cache eviction policy least recently used and TTL"
+    expected_source: "redis-caching.md"
+    expected_topics: ["LRU", "maxmemory", "TTL", "cache-aside"]
+
+  - query: "protocol buffers binary serialization and bidirectional streaming"
+    expected_source: "grpc-basics.md"
+    expected_topics: ["protobuf", "HTTP/2", "stub", "streaming"]
+
+  - query: "reusable infrastructure modules with input variables and outputs"
+    expected_source: "terraform-modules.md"
+    expected_topics: ["module", "variable", "output", "plan"]
+
+  - query: "authorization code grant exchanging a code for an access token"
+    expected_source: "oauth2-flows.md"
+    expected_topics: ["authorization code", "token", "PKCE", "client secret"]

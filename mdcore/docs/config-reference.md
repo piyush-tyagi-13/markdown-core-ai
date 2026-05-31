@@ -155,6 +155,7 @@ Controls how `ctxkit search` finds, assembles, and formats the context package. 
 retriever:
   keyword_prefilter: true
   keyword_prefilter_min_score: 0.3
+  keyword_prefilter_mode: hybrid
   top_k: 15
   similarity_threshold: 0.65
   context_block_max_words: 1000
@@ -174,8 +175,9 @@ retriever:
 
 | Field | Type | Default | Description |
 |---|---|---|---|
-| `keyword_prefilter` | bool | `true` | Run a keyword match against file titles and folder paths before the vector search. Eliminates cross-domain false positives (e.g. "health check" pulling in personal health notes). |
-| `keyword_prefilter_min_score` | float | `0.3` | Minimum keyword overlap fraction for a source to pass the prefilter. `0.3` means at least 30% of query terms must appear in the filename or folder path. Raise to `0.5` if unrelated files keep appearing. |
+| `keyword_prefilter` | bool | `true` | Run a lexical pre-filter before the vector search to narrow candidate files. Eliminates cross-domain false positives (e.g. "health check" pulling in personal health notes). |
+| `keyword_prefilter_mode` | str | `hybrid` | How candidates are selected: `hybrid` (BM25 over chunk content + filename/folder matching), `bm25` (BM25 over content only), or `path` (legacy filename/folder term match only). |
+| `keyword_prefilter_min_score` | float | `0.3` | Path-match threshold (used in `path` and `hybrid` modes): minimum fraction of query terms that must appear in the filename or folder path. `0.3` = 30%. Raise to `0.5` if unrelated files keep appearing. Does not affect BM25 content matching. |
 | `top_k` | int | `15` | Number of chunks returned by the vector search. Higher gives more raw material to assemble from but increases noise risk. Raise to `20` for broad orientation queries. |
 | `similarity_threshold` | float | `0.65` | Minimum cosine similarity (0–1) for a chunk to be included. Raise toward `0.75` to cut noise; lower toward `0.55` to cast a wider net. |
 

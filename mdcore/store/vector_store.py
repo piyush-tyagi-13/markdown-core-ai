@@ -107,6 +107,19 @@ class VectorStore:
         results = self._collection.get(include=["metadatas"])
         return list(results["metadatas"])
 
+    def all_chunks(self) -> list[Document]:
+        """Return every stored chunk as a Document (content + metadata).
+
+        Used by the BM25 keyword pre-filter, which scores over chunk content.
+        """
+        if self._count() == 0:
+            return []
+        results = self._collection.get(include=["documents", "metadatas"])
+        return [
+            Document(page_content=doc, metadata=dict(meta))
+            for doc, meta in zip(results["documents"], results["metadatas"])
+        ]
+
     def _count(self) -> int:
         return self._collection.count()
 

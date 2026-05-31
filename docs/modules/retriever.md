@@ -5,17 +5,18 @@ Implements Flow A retrieval: keyword pre-filtering, vector search, chunk groupin
 
 ### Public interface
 
-**`KeywordPreFilter(min_score: float = 0.3, owner_name: str = "")`**
-- `filter(query: str, all_metadata: list[dict]) -> set[str]` — returns matching source_file paths
-- Scoring: `sum(1 for t in terms if t in (filename + " " + folder_path)) / len(terms)`
-- Threshold: min_score (0.3) — 30% of query terms must appear in filename or folder path
-- Owner name logic:
+**`KeywordPreFilter(min_score: float = 0.3, owner_name: str = "", mode: "hybrid"|"bm25"|"path" = "hybrid")`**
+- `filter(query: str, chunks: list[Document]) -> set[str]` — returns candidate source_file paths
+- Three modes:
+  - **`bm25`** — BM25 (`rank_bm25.BM25Okapi`) over chunk *content*. Candidacy is gated on lexical token overlap (robust at any vault size — BM25 IDF can be zero/negative for terms common in a tiny corpus, so a raw score threshold would wrongly drop them); BM25 then ranks matching files and the set is capped at `_BM25_MAX_CANDIDATE_FILES` (50). Per-file score = best matching chunk.
+  - **`path`** — legacy term-presence ratio over filename + folder_path: `sum(1 for t in terms if t in (filename + " " + folder_path)) / len(terms)`, threshold `min_score` (0.3).
+  - **`hybrid`** (default) — union of `bm25` content matches and `path` matches.
+- Owner name logic (applies in every mode):
   1. If owner_name words appear in query: strip them from terms
   2. Detect "other-person" folder prefixes: first word of first path component that is a plausible person name (uppercase, alpha, 3-20 chars, not in _COMMON_FOLDER_WORDS list, not owner)
-  3. Apply _OTHER_PERSON_PENALTY (0.2x) to files in those folders
+  3. Exclude files under those folders from candidacy (cross-person contamination guard; path mode additionally applies a 0.2x penalty)
   4. If all terms were owner words (nothing left): return ALL source_files (fall back to vector search)
-- Does NOT do BM25 tf-idf — pure term presence ratio
-- Reads: filename and folder_path from chunk metadata
+- Reads: `page_content` (bm25) and filename/folder_path (path) from chunk Documents — fetched via `VectorStore.all_chunks()`
 
 **`VectorSearcher(store: VectorStore, engine: EmbeddingEngine, cfg: RetrieverConfig)`**
 - `search(query: str, candidate_sources: set[str] | None) -> list[Document]`
@@ -70,7 +71,8 @@ KeywordPreFilter.filter() -> VectorSearcher.search() -> group_by_source() -> sti
 - No filesystem writes
 
 ### Gotchas
-- KeywordPreFilter uses filename + folder_path only — not file content. A file named "work.md" in folder "Projects" matches "projects work" but not "quarterly review" even if that's its content.
+- KeywordPreFilter in `hybrid`/`bm25` mode scores chunk content via BM25, so a file matches on body text even when its name/folder don't. In `path` mode it falls back to filename + folder_path only (a file named "work.md" in "Projects" matches "projects work" but not "quarterly review" in its body).
+- BM25 candidacy is gated on token overlap, not a raw score threshold: BM25 IDF goes to zero/negative for terms present in a large fraction of a small corpus, which would otherwise drop a file that clearly contains the term.
 - Phase 2 rescue threshold = 0.75 x similarity_threshold. Default: 0.65 x 0.75 = 0.4875. Files keyword-matched but semantically distant still get included at this lower bar.
 - stitch() gap-fills by checking `retrieved_indices` list only — gaps between chunk_indices are spanned, but non-retrieved chunks' text is not fetched from store. Only retrieved chunks' text appears in output.
 - AssembledContext.primary uses actual passages from ranked list. If a source has 5 chunks but max_chunks_per_source=2, only 2 are used even if more fit the budget.

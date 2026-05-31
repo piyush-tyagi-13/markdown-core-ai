@@ -1,0 +1,36 @@
+# Fixture config for the offline CI retrieval eval. No secrets.
+# vault.path and vector_store.persist_path are overridden at runtime by
+# scripts/ci_retrieval_eval.py to absolute, repo-relative paths.
+
+vault:
+  path: ./tests/fixtures/eval/vault
+  owner_name: ""
+
+indexer:
+  min_word_count: 50
+  chunk_size: 512
+  chunk_overlap: 64
+  heading_aware_splitting: true
+
+embeddings:
+  backend: huggingface
+  local_model: sentence-transformers/all-MiniLM-L6-v2
+
+vector_store:
+  persist_path: ./.eval-index/chroma_db
+  collection_name: mdcore_eval
+
+retriever:
+  keyword_prefilter: true
+  keyword_prefilter_mode: hybrid
+  top_k: 5
+  # MiniLM cosine scores sit lower than the prod default; the gate measures
+  # ranking (is the expected note in the top-k), so do not threshold on score.
+  similarity_threshold: 0.0
+
+llm:
+  backend: ollama          # never invoked — retrieval-only gate, no synthesis
+  model: none
+
+manifest:
+  path: ./.eval-index/manifest.json

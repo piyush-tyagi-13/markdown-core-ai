@@ -718,8 +718,8 @@ def search(
     with Progress(SpinnerColumn(), TextColumn("{task.description}"), console=console, transient=True) as p:
         p.add_task("Searching...")
 
-        all_metadata = store.all_metadata()
-        if not all_metadata:
+        all_chunks = store.all_chunks()
+        if not all_chunks:
             console.print("[yellow]Index is empty. Run [bold]mdcore index[/bold] first.[/yellow]")
             return
 
@@ -728,8 +728,9 @@ def search(
             prefilter = KeywordPreFilter(
                 cfg.retriever.keyword_prefilter_min_score,
                 owner_name=cfg.vault.owner_name,
+                mode=cfg.retriever.keyword_prefilter_mode,
             )
-            candidate_sources = prefilter.filter(topic, all_metadata) or None
+            candidate_sources = prefilter.filter(topic, all_chunks) or None
 
         # Strip owner name from vector query — not in content, adds noise.
         vector_query = topic
@@ -1112,15 +1113,16 @@ def eval(
 
         store = _make_store(cfg)
         engine = _make_engine(cfg)
-        all_metadata = store.all_metadata()
+        all_chunks = store.all_chunks()
 
         candidate_sources = None
         if cfg.retriever.keyword_prefilter:
             prefilter = KeywordPreFilter(
                 cfg.retriever.keyword_prefilter_min_score,
                 owner_name=cfg.vault.owner_name,
+                mode=cfg.retriever.keyword_prefilter_mode,
             )
-            candidate_sources = prefilter.filter(topic, all_metadata) or None
+            candidate_sources = prefilter.filter(topic, all_chunks) or None
 
         searcher = VectorSearcher(store, engine, cfg.retriever)
         chunks = searcher.search(topic, candidate_sources)
