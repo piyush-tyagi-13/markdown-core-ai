@@ -14,10 +14,9 @@ jobs:
         with:
           python-version: "3.11"
           cache: pip
-      - name: Install package
-        run: pip install -e .
-      - name: Install test tools
-        run: pip install pytest
+      - name: Install package + extras needed by tests
+        # serve extra provides fastapi for test_server.py
+        run: pip install -e ".[serve]" pytest
       - name: Run unit tests
         # Aggregator tests need the optional llm_keypool dependency; skip them here.
         run: pytest -q --ignore=tests/test_llm_layer_aggregator.py
