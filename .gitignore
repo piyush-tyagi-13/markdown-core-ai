@@ -13,6 +13,9 @@ build/
 ~/.ctxkit/
 # personal markdown vault — never publish
 vault/
+# but DO commit the synthetic CI fixture vault
+!tests/fixtures/eval/vault/
+!tests/fixtures/eval/vault/**
 *.bak
 
 # Personal notes accidentally in repo root
@@ -29,3 +32,6 @@ Thumbs.db
 .vscode/
 .idea/
 *.swp
+
+# CI retrieval-eval throwaway index
+.eval-index/
